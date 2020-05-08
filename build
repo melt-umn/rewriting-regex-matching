@@ -1,0 +1,4 @@
+#!/bin/bash
+
+silver -o regex.jar -I grammars $@ edu:umn:cs:melt:rewritingRegexMatching:driver
+
