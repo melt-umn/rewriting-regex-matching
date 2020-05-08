@@ -2,7 +2,12 @@
 
 java -jar regex.jar 'abc' 'abc' || (echo "Test failed"; exit 1)
 java -jar regex.jar 'abc' 'cba' && (echo "Test failed"; exit 1)
+java -jar regex.jar 'a(xy|c)+' 'acxyxyxyxyccxyc' || (echo "Test failed"; exit 1)
+java -jar regex.jar 'a(xy|c)+' 'acxyxyxyxxyccxyc' && (echo "Test failed"; exit 1)
 java -jar regex.jar 'a(xy|c)+a' 'acxyxyxyxyccxyca' || (echo "Test failed"; exit 1)
 java -jar regex.jar 'a(xy|c)+a' 'acxyxyxyxxyccxyca' && (echo "Test failed"; exit 1)
 java -jar regex.jar '' '' || (echo "Test failed"; exit 1)
 java -jar regex.jar '' 'ac' && (echo "Test failed"; exit 1)
+
+echo "Tests passed"
+exit 0
