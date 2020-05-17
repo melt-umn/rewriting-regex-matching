@@ -128,11 +128,11 @@ nonterminal RegexChar with ast<Regex>;
 concrete production regexChar
 top::RegexChar ::= c::RegexChar_t
 {
-  top.ast = char(c.lexeme);
+  top.ast = char(head(stringToChars(c.lexeme)));
 }
 
 concrete production regexEscapedChar
 top::RegexChar ::= esc::EscapedChar_t
 {
-  top.ast = char(esc.lexeme);
+  top.ast = char(head(stringToChars(esc.lexeme)));
 }

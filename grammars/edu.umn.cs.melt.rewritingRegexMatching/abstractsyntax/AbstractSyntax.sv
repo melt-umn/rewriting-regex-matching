@@ -6,7 +6,7 @@ imports silver:langutil:pp;
 
 synthesized attribute nullable::Boolean;
 
-inherited attribute wrt::String;
+inherited attribute wrt::Integer; -- Char
 synthesized attribute deriv::Regex;
 
 inherited attribute isEqualTo::Regex;
@@ -28,6 +28,21 @@ strategy attribute simpl =
     | star(epsilon()) -> epsilon()
     end);
 
+{- Alternative way deriv could be defined with strategy attributes
+strategy attribute deriv =
+  allTopDown(
+    rule on top::Regex of
+    | epsilon() -> empty()
+    | char(c) when c == top.wrt -> epsilon()
+    | char(_) -> empty()
+    | seq(r1, r2) ->
+      alt(
+        seq(r1.derivA, r2),
+        if r1.nullable then r2.deriv else empty())
+    | star(r) -> seq(r.deriv, top)
+    end);
+-}
+
 strategy attribute simplDeriv = deriv <* simpl;
 
 function matches
@@ -35,8 +50,8 @@ Boolean ::= r::Regex s::String
 {
   return
     foldl(
-      \ r::Regex c::String -> decorate r with { wrt = c; }.simplDeriv,
-      r, explode("", s)).nullable;
+      \ r::Regex c::Integer -> decorate r with { wrt = c; }.simplDeriv,
+      r, stringToChars(s)).nullable;
 }
 
 nonterminal Regex with nullable, wrt, deriv, isEqualTo, isEqual, simpl, simplDeriv;
@@ -60,7 +75,7 @@ top::Regex ::=
 }
 
 abstract production char
-top::Regex ::= c::String
+top::Regex ::= c::Integer
 {
   top.nullable = false;
   top.deriv = if c == top.wrt then epsilon() else empty(); 
