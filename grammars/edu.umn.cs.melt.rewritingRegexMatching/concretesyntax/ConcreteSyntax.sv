@@ -12,8 +12,13 @@ terminal Plus_t          '+' lexer classes { Operator };
 terminal Kleene_t        '*' lexer classes { Operator };
 terminal Optional_t      '?' lexer classes { Operator };
 terminal Choice_t        '|' lexer classes { Operator };
+terminal Range_t         '-' lexer classes { Operator };
+terminal RegexNot_t      '^' lexer classes { Operator };
+terminal RegexLBrack_t   '[' lexer classes { Operator };
+terminal RegexRBrack_t   ']' lexer classes { Operator };
 terminal RegexLParen_t   '(' lexer classes { Operator };
 terminal RegexRParen_t   ')' lexer classes { Operator };
+terminal RegexWildcard_t '.' lexer classes { Operator };
 terminal RegexChar_t     /./ lexer classes { Escape };
 terminal EscapedChar_t /\\./ lexer classes { Escape };
 
@@ -24,8 +29,13 @@ disambiguate RegexChar_t, Plus_t { pluck Plus_t; }
 disambiguate RegexChar_t, Kleene_t { pluck Kleene_t; }
 disambiguate RegexChar_t, Optional_t { pluck Optional_t; }
 disambiguate RegexChar_t, Choice_t { pluck Choice_t; }
+disambiguate RegexChar_t, Range_t { pluck Range_t; }
+disambiguate RegexChar_t, RegexNot_t { pluck RegexNot_t; }
+disambiguate RegexChar_t, RegexLBrack_t { pluck RegexLBrack_t; }
+disambiguate RegexChar_t, RegexRBrack_t { pluck RegexRBrack_t; }
 disambiguate RegexChar_t, RegexLParen_t { pluck RegexLParen_t; }
 disambiguate RegexChar_t, RegexRParen_t { pluck RegexRParen_t; }
+disambiguate RegexChar_t, RegexWildcard_t { pluck RegexWildcard_t; }
 
 
 {--
@@ -110,7 +120,25 @@ nonterminal RegexItem with ast<Regex>;      -- characters or sequences/sets
 concrete production regexCharItem
 top::RegexItem ::= c::RegexChar
 {
-  top.ast = c.ast;
+  top.ast = char(c.ast);
+}
+
+concrete production regexWildcard
+top::RegexItem ::= '.'
+{
+  top.ast = negChars(char(head(stringToChars("\n"))));
+}
+
+concrete production regexSet
+top::RegexItem ::= '[' g::RegexCharSet ']'
+{
+  top.ast = g.ast;
+}
+
+concrete production regexSetInverted
+top::RegexItem ::= '[' '^' g::RegexCharSet ']'
+{
+  top.ast = negChars(g.ast);
 }
 
 concrete production regexGroup
@@ -121,18 +149,54 @@ top::RegexItem ::= '(' r::Regex_c ')'
 
 
 {--
+ - A list of options or ranges within a regexSet.
+ -}
+nonterminal RegexCharSet with ast<Regex>;
+
+concrete production regexCharSetSnoc
+top::RegexCharSet ::= h::RegexCharSet  t::RegexCharSetItem
+{
+  top.ast = alt(h.ast, t.ast);
+}
+
+concrete production regexCharSetOne
+top::RegexCharSet ::= t::RegexCharSetItem
+{
+  top.ast = t.ast;
+}
+
+
+{--
+ - An option or range within a regexSet.
+ -}
+nonterminal RegexCharSetItem with ast<Regex>;
+
+concrete production regexSetChar
+top::RegexCharSetItem ::= c::RegexChar
+{
+  top.ast = char(c.ast);
+}
+
+concrete production regexSetRange
+top::RegexCharSetItem ::= l::RegexChar '-' u::RegexChar
+{
+  top.ast = charRange(l.ast, u.ast);
+}
+
+
+{--
  - A character, escaped or otherwise.
  -}
-nonterminal RegexChar with ast<Regex>;
+nonterminal RegexChar with ast<Integer>;
 
 concrete production regexChar
 top::RegexChar ::= c::RegexChar_t
 {
-  top.ast = char(head(stringToChars(c.lexeme)));
+  top.ast = head(stringToChars(c.lexeme));
 }
 
 concrete production regexEscapedChar
 top::RegexChar ::= esc::EscapedChar_t
 {
-  top.ast = char(head(stringToChars(esc.lexeme)));
+  top.ast = head(tail(stringToChars(esc.lexeme)));
 }

@@ -78,8 +78,27 @@ abstract production char
 top::Regex ::= c::Integer
 {
   top.nullable = false;
-  top.deriv = if c == top.wrt then epsilon() else empty(); 
+  top.deriv = if c == top.wrt then epsilon() else empty();
   top.isEqual = case top.isEqualTo of char(c1) -> c == c1 | _ -> false end;
+}
+
+abstract production charRange
+top::Regex ::= l::Integer u::Integer
+{
+  top.nullable = false;
+  top.deriv = if l <= top.wrt && top.wrt <= u then epsilon() else empty();
+  top.isEqual = case top.isEqualTo of charRange(l1, u1) -> l == l1 && u == u1 | _ -> false end;
+}
+
+abstract production negChars
+top::Regex ::= r::Regex
+{
+  top.nullable = false;
+  top.deriv = if r.deriv.nullable then empty() else epsilon();
+  r.wrt = top.wrt;
+  
+  top.isEqual = case top.isEqualTo of negChars(_) -> r.isEqual | _ -> false end;
+  r.isEqualTo = case top.isEqualTo of negChars(r) -> r end;
 }
 
 abstract production seq
