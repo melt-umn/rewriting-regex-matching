@@ -198,5 +198,5 @@ top::RegexChar ::= c::RegexChar_t
 concrete production regexEscapedChar
 top::RegexChar ::= esc::EscapedChar_t
 {
-  top.ast = head(tail(stringToChars(esc.lexeme)));
+  top.ast = head(stringToChars(unescapeString(esc.lexeme)));
 }
