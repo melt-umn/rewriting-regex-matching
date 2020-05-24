@@ -1,6 +1,7 @@
 grammar edu:umn:cs:melt:rewritingRegexMatching:abstractsyntax;
 
 imports core:monad;
+imports silver:rewrite;
 imports silver:langutil;
 imports silver:langutil:pp;
 
@@ -12,6 +13,24 @@ synthesized attribute deriv::Regex;
 inherited attribute isEqualTo::Regex;
 synthesized attribute isEqual::Boolean;
 
+-- Simplification using term rewriting
+global simpl::Strategy =
+  innermost(
+    rule on Regex of
+    | seq(empty(), r) -> empty()
+    | seq(r, empty()) -> empty()
+    | seq(epsilon(), r) -> r
+    | seq(r, epsilon()) -> r
+    | alt(empty(), r) -> r
+    | alt(r, empty()) -> r
+    | alt(epsilon(), r) when r.nullable -> r
+    | alt(r, epsilon()) when r.nullable -> r
+    | alt(r1, r2) when decorate r1 with { isEqualTo = r2; }.isEqual -> r1
+    | star(empty()) -> epsilon()
+    | star(epsilon()) -> epsilon()
+    end);
+
+-- Simplification using strategy attributes
 strategy attribute simpl =
   innermost(
     rule on Regex of
@@ -48,6 +67,10 @@ strategy attribute simplDeriv = deriv <* simpl;
 function matches
 Boolean ::= r::Regex s::String
 {
+  {-return
+    foldl(
+      \ r::Regex c::Integer -> rewriteWith(simpl, decorate r with { wrt = c; }.deriv).fromJust,
+      r, stringToChars(s)).nullable;-}
   return
     foldl(
       \ r::Regex c::Integer -> decorate r with { wrt = c; }.simplDeriv,
