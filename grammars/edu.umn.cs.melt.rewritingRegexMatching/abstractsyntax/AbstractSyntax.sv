@@ -63,17 +63,22 @@ strategy attribute deriv =
 
 strategy attribute simplDeriv = deriv <* simpl;
 
+function matchStep
+Regex ::= r::Regex c::Integer
+{
+  r.wrt = c;
+  
+  -- Simplification using term rewriting
+  --return rewriteWith(simpl, r.deriv).fromJust;
+  
+  -- Simplification using strategy attributes
+  return r.simplDeriv;
+}
+
 function matches
 Boolean ::= r::Regex s::String
 {
-  {-return
-    foldl(
-      \ r::Regex c::Integer -> rewriteWith(simpl, decorate r with { wrt = c; }.deriv).fromJust,
-      r, stringToChars(s)).nullable;-}
-  return
-    foldl(
-      \ r::Regex c::Integer -> decorate r with { wrt = c; }.simplDeriv,
-      r, stringToChars(s)).nullable;
+  return foldl(matchStep, r, stringToChars(s)).nullable;
 }
 
 nonterminal Regex with nullable, wrt, deriv, isEqualTo, isEqual, simpl, simplDeriv;
