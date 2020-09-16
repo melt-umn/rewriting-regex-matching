@@ -55,12 +55,12 @@ strategy attribute deriv =
   allTopDown(
     rule on top::Regex of
     | epsilon() -> empty()
-    | char(c) _> if c == top.wrt then epsilon() else empty()
+    | char(c) -> if c == top.wrt then epsilon() else empty()
     | charRange(l, u) -> if l <= top.wrt && top.wrt <= u then epsilon() else empty()
     | negChars(r) -> if r.deriv.nullable then empty() else epsilon()
     | seq(r1, r2) ->
       alt(
-        seq(r1.derivA, r2),
+        seq(r1.deriv, r2),
         if r1.nullable then r2.deriv else empty())
     | star(r) -> seq(r.deriv, top)
     end);
