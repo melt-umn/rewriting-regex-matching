@@ -47,13 +47,17 @@ strategy attribute simpl =
     | star(epsilon()) -> epsilon()
     end);
 
-{- Alternative way deriv could be defined with strategy attributes
+{- Alternative way deriv could be defined with strategy attributes.
+ - This may be considered less idiomatic than writing explicit equations as
+ - cases are needed for all productions except empty and alt, thus this
+ - attribute is minimally "strategic".
 strategy attribute deriv =
   allTopDown(
     rule on top::Regex of
     | epsilon() -> empty()
-    | char(c) when c == top.wrt -> epsilon()
-    | char(_) -> empty()
+    | char(c) _> if c == top.wrt then epsilon() else empty()
+    | charRange(l, u) -> if l <= top.wrt && top.wrt <= u then epsilon() else empty()
+    | negChars(r) -> if r.deriv.nullable then empty() else epsilon()
     | seq(r1, r2) ->
       alt(
         seq(r1.derivA, r2),
