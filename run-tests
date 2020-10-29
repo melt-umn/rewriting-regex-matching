@@ -1,17 +1,35 @@
 #!/bin/bash
 
-java -jar regex.jar 'abc' 'abc' || (echo "Test failed"; exit 1)
-java -jar regex.jar 'abc' 'cba' && (echo "Test failed"; exit 1)
-java -jar regex.jar 'a(xy|c)+' 'acxyxyxyxyccxyc' || (echo "Test failed"; exit 1)
-java -jar regex.jar 'a(xy|c)+' 'acxyxyxyxxyccxyc' && (echo "Test failed"; exit 1)
-java -jar regex.jar 'a(xy|c)+a' 'acxyxyxyxyccxyca' || (echo "Test failed"; exit 1)
-java -jar regex.jar 'a(xy|c)+a' 'acxyxyxyxxyccxyca' && (echo "Test failed"; exit 1)
-java -jar regex.jar '' '' || (echo "Test failed"; exit 1)
-java -jar regex.jar '' 'ac' && (echo "Test failed"; exit 1)
-java -jar regex.jar '[a-zA-Z_][a-zA-Z_0-9]*' 'asd_f323' || (echo "Test failed"; exit 1)
-java -jar regex.jar '[a-zA-Z_][a-zA-Z_0-9]*' 'asd_f3@23' && (echo "Test failed"; exit 1)
-java -jar regex.jar '\{\-(\{\-([^\-]|\-+[^\}\-])*\-+\}|[^\-]|\-+[^\}\-])*\-+\}' '{-{-a-}{--bc--}d-}' || (echo "Test failed"; exit 1)
-java -jar regex.jar '\{\-(\{\-([^\-]|\-+[^\}\-])*\-+\}|[^\-]|\-+[^\}\-])*\-+\}' '{-{-a{--}-}{--bc--}d-}' && (echo "Test failed"; exit 1)
+function test_match {
+    echo -n "Matching /$1/ against '$2' (should match)... "
+    if ! java -jar regex.jar "$1" "$2"
+    then
+        echo "Test failed"
+        exit 1
+    fi
+}
+
+function test_nomatch {
+    echo -n "Matching /$1/ against '$2' (shouldn't match)... "
+    if java -jar regex.jar "$1" "$2"
+    then
+        echo "Test failed"
+        exit 1
+    fi
+}
+
+test_match 'abc' 'abc'
+test_nomatch 'abc' 'cba'
+test_match 'a(xy|c)+' 'acxyxyxyxyccxyc'
+test_nomatch 'a(xy|c)+' 'acxyxyxyxxyccxyc'
+test_match 'a(xy|c)+a' 'acxyxyxyxyccxyca'
+test_nomatch 'a(xy|c)+a' 'acxyxyxyxxyccxyca'
+test_match '' ''
+test_nomatch '' 'ac'
+test_match '[a-zA-Z_][a-zA-Z_0-9]*' 'asd_f323'
+test_nomatch '[a-zA-Z_][a-zA-Z_0-9]*' 'asd_f3@23'
+test_match '\{\-(\{\-([^\-]|\-+[^\}\-])*\-+\}|[^\-]|\-+[^\}\-])*\-+\}' '{-{-a-}{--bc--}d-}'
+test_nomatch '\{\-(\{\-([^\-]|\-+[^\}\-])*\-+\}|[^\-]|\-+[^\}\-])*\-+\}' '{-{-a{--}-}{--bc--}d-}'
 
 echo "Tests passed"
 exit 0
