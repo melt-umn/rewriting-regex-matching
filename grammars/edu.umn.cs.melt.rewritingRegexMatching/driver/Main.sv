@@ -1,6 +1,5 @@
 grammar edu:umn:cs:melt:rewritingRegexMatching:driver;
 
-imports core:monad;
 imports silver:langutil;
 imports silver:langutil:pp;
 

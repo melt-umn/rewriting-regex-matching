@@ -1,6 +1,5 @@
 grammar edu:umn:cs:melt:rewritingRegexMatching:abstractsyntax;
 
-imports core:monad;
 imports silver:rewrite;
 imports silver:langutil;
 imports silver:langutil:pp;
