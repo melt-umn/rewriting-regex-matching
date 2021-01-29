@@ -2,6 +2,7 @@ grammar edu:umn:cs:melt:rewritingRegexMatching:concretesyntax;
 
 -- From silver:definition:regex
 
+imports silver:core hiding empty, alt;
 imports silver:langutil;
 imports edu:umn:cs:melt:rewritingRegexMatching:abstractsyntax;
 
