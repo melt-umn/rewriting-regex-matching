@@ -24,7 +24,7 @@ global simpl::Strategy =
     | alt(r, empty()) -> r
     | alt(epsilon(), r) when r.nullable -> r
     | alt(r, epsilon()) when r.nullable -> r
-    | alt(r1, r2) when decorate r1 with { isEqualTo = r2; }.isEqual -> r1
+    | alt(r1, r2) when decorate r1 with { isEqualTo = decorate r2 with {}; }.isEqual -> r1
     | star(empty()) -> epsilon()
     | star(epsilon()) -> epsilon()
     end);
@@ -35,13 +35,13 @@ strategy attribute simpl =
     rule on Regex of
     | seq(empty(), r) -> empty()
     | seq(r, empty()) -> empty()
-    | seq(epsilon(), r) -> r
-    | seq(r, epsilon()) -> r
-    | alt(empty(), r) -> r
-    | alt(r, empty()) -> r
-    | alt(epsilon(), r) when r.nullable -> r
-    | alt(r, epsilon()) when r.nullable -> r
-    | alt(r1, r2) when decorate r1 with { isEqualTo = r2; }.isEqual -> r1
+    | seq(epsilon(), r) -> ^r
+    | seq(r, epsilon()) -> ^r
+    | alt(empty(), r) -> ^r
+    | alt(r, empty()) -> ^r
+    | alt(epsilon(), r) when r.nullable -> ^r
+    | alt(r, epsilon()) when r.nullable -> ^r
+    | alt(r1, r2) when decorate ^r1 with { isEqualTo = r2; }.isEqual -> ^r1
     | star(empty()) -> epsilon()
     | star(epsilon()) -> epsilon()
     end);
@@ -79,11 +79,8 @@ Regex ::= r::Regex c::Integer
   return r.simplDeriv;
 }
 
-function matches
-Boolean ::= r::Regex s::String
-{
-  return foldl(matchStep, r, stringToChars(s)).nullable;
-}
+fun matches Boolean ::= r::Regex s::String =
+  foldl(matchStep, r, stringToChars(s)).nullable;
 
 nonterminal Regex with nullable, wrt, deriv, isEqualTo, isEqual, simpl, simplDeriv;
 
@@ -131,7 +128,7 @@ top::Regex ::= r1::Regex r2::Regex
   top.nullable = r1.nullable && r2.nullable;
   top.deriv =
     alt(
-      seq(r1.deriv, r2),
+      seq(r1.deriv, ^r2),
       if r1.nullable then r2.deriv else empty());
   r1.wrt = top.wrt;
   r2.wrt = top.wrt;
@@ -150,6 +147,6 @@ abstract production star
 top::Regex ::= r::Regex
 {
   top.nullable = true;
-  top.deriv = seq(r.deriv, top);
+  top.deriv = seq(r.deriv, ^top);
   r.wrt = top.wrt;
 }
